@@ -1,0 +1,50 @@
+name: Ubuntu - Apache2
+version: v1.0.0
+inputs:
+  size:
+    type: string
+    enum:
+      - small
+      - medium
+      - large
+    default: small
+    description: VM size
+    title: VM Size
+  count:
+    type: integer
+    default: 1
+    maximum: 4
+    minimum: 1
+    description: Number of machines
+    title: Number of machines
+  keypair:
+    type: string
+    default: scott-vra8
+    description: ssh keypair name
+    title: Keypair Name
+resources:
+  Ubuntu_VM:
+    type: Cloud.Machine
+    properties:
+      flavor: '${input.size}'
+      image: ubuntu
+      count: '${input.count}'
+      sshKeyName: '${input.keypair}'
+      cloudConfig: |
+        #cloud-config
+          packages:
+          - apache2 
+          runcmd:
+          - sudo service apache2 start
+          - echo "DONE" > /tmp/done
+      networks:
+        - name: '${Cloud_Network.name}'
+          assignPublicIpAddress: true
+          network: '${resource.Cloud_Network.id}'
+  Cloud_Network:
+    type: Cloud.Network
+    properties:
+      networkType: existing
+      name: cas-aws
+      constraints:
+        - tag: 'networktype:public'
